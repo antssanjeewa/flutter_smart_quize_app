@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quize_app/utils/theme.dart';
 import 'package:quize_app/views/home_page.dart';
-import 'package:quize_app/views/manage_quizzes_page.dart';
 
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
@@ -11,8 +10,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       title: 'Quiz App',
       theme: AppTheme.theme,
-      home: ManageQuizzesPage(),
-      // home: HomePage(),
+      home: HomePage(),
       debugShowCheckedModeBanner: false,
     );
   }

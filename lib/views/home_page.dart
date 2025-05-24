@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:quize_app/utils/theme.dart';
+import 'package:quize_app/views/manage_categories_page.dart';
+import 'package:quize_app/views/manage_quizzes_page.dart';
 
 class HomePage extends StatelessWidget {
   HomePage({super.key});
@@ -132,7 +134,7 @@ class HomePage extends StatelessWidget {
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text("Has Error"));
+            return Center(child: Text("Has Error: ${snapshot.error}"));
           }
 
           final Map<String, dynamic> stats = snapshot.data!;
@@ -303,13 +305,28 @@ class HomePage extends StatelessWidget {
                                 context,
                                 "Quizzes",
                                 Icons.quiz_rounded,
-                                () {},
+                                () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ManageQuizzesPage(),
+                                    ),
+                                  );
+                                },
                               ),
                               _buildDashboardCard(
                                 context,
                                 "Categories",
                                 Icons.category_rounded,
-                                () {},
+                                () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => ManageCategoriesPage(),
+                                    ),
+                                  );
+                                },
                               ),
                             ],
                           ),
