@@ -18,7 +18,7 @@ class HomePage extends StatelessWidget {
             .limit(5)
             .get();
 
-    final categories = await _firestore.collection('categories').get();
+    final categories = await _firestore.collection('categories').limit(5).get();
 
     final categoryData = await Future.wait(
       categories.docs.map((category) async {
@@ -28,7 +28,7 @@ class HomePage extends StatelessWidget {
                 .where('categoryId', isEqualTo: category.id)
                 .count()
                 .get();
-        return {'name': category.data()['name'], 'quizzes': quizCount.count};
+        return {'name': category.data()['name'], 'count': quizCount.count};
       }),
     );
 
@@ -96,14 +96,14 @@ class HomePage extends StatelessWidget {
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: AppTheme.primary,
+                  color: AppTheme.primary.withAlpha(50),
                 ),
                 child: Icon(icon, size: 32, color: AppTheme.primary),
               ),
               SizedBox(height: 16),
               Text(
                 title,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -179,6 +179,7 @@ class HomePage extends StatelessWidget {
                   ),
 
                   SizedBox(height: 24),
+
                   Card(
                     child: Padding(
                       padding: EdgeInsets.all(20),
@@ -204,17 +205,231 @@ class HomePage extends StatelessWidget {
                               ),
                             ],
                           ),
+                          SizedBox(height: 20),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: categoryData.length,
+                            itemBuilder: (context, index) {
+                              return CategoryDetailsCard(
+                                categoryData: categoryData,
+                                index: index,
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ),
                   ),
 
                   SizedBox(height: 20),
+                  Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.history_rounded,
+                                size: 24,
+                                color: AppTheme.primary,
+                              ),
+
+                              SizedBox(width: 12),
+
+                              Text(
+                                "Recent Activity",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 20),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            itemCount: latestQuizzes.length,
+                            itemBuilder: (context, index) {
+                              return HistoryDetailsCard(
+                                data: latestQuizzes,
+                                index: index,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  Card(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.speed_rounded,
+                                size: 24,
+                                color: AppTheme.primary,
+                              ),
+
+                              SizedBox(width: 12),
+
+                              Text(
+                                "Quiz Actions",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 20),
+                          GridView.count(
+                            crossAxisCount: 2,
+                            shrinkWrap: true,
+                            physics: NeverScrollableScrollPhysics(),
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 0.9,
+                            crossAxisSpacing: 16,
+                            children: [
+                              _buildDashboardCard(
+                                context,
+                                "Quizzes",
+                                Icons.quiz_rounded,
+                                () {},
+                              ),
+                              _buildDashboardCard(
+                                context,
+                                "Categories",
+                                Icons.category_rounded,
+                                () {},
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class CategoryDetailsCard extends StatelessWidget {
+  final List categoryData;
+  final int index;
+
+  const CategoryDetailsCard({
+    super.key,
+    required this.categoryData,
+    required this.index,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final category = categoryData[index];
+    final totalQuizzes = categoryData.fold(
+      0,
+      (sum, item) => sum + (item['count'] as int),
+    );
+
+    final percentage =
+        totalQuizzes > 0
+            ? (category['count'] as int) / totalQuizzes * 100
+            : 0.0;
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  category['name'] as String,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 20),
+                Text(
+                  "${category['count']} ${(category['count'] as int) == 1 ? 'quiz' : 'quizzes'}",
+                  style: TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: AppTheme.primary.withAlpha(50),
+            ),
+            child: Text(
+              '${percentage.toStringAsFixed(1)}%',
+              style: TextStyle(fontSize: 12, color: AppTheme.primary),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class HistoryDetailsCard extends StatelessWidget {
+  final List data;
+  final int index;
+
+  const HistoryDetailsCard({
+    super.key,
+    required this.data,
+    required this.index,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final quiz = data[index].data();
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: AppTheme.primary.withAlpha(50),
+            ),
+            child: Icon(Icons.quiz_rounded, color: AppTheme.primary, size: 20),
+          ),
+          SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  quiz['title'] as String,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  "Created on ${quiz['createdAt'].toString()}",
+                  style: TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
