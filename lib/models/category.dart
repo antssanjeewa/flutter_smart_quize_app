@@ -17,7 +17,10 @@ class Category {
       id: id,
       name: map['name'] ?? "",
       description: map['description'] ?? "",
-      createdAt: DateTime.parse(map['createdAt'] ?? ""),
+      // createdAt:
+      //     map['createdAt'] != null
+      //         ? DateTime.parse(map['createdAt'])
+      //         : DateTime.now(),
     );
   }
 

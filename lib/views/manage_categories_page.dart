@@ -31,7 +31,7 @@ class ManageCategoriesPage extends StatelessWidget {
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: _firestore.collection('categories').snapshots(),
+        stream: _firestore.collection('categories').orderBy('name').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(child: Text("Error : ${snapshot.error}"));
@@ -86,6 +86,7 @@ class ManageCategoriesPage extends StatelessWidget {
                             value: "edit",
                             child: ListTile(
                               leading: Icon(Icons.edit),
+                              dense: true,
                               title: Text("Edit"),
                               contentPadding: EdgeInsets.zero,
                             ),
@@ -93,12 +94,18 @@ class ManageCategoriesPage extends StatelessWidget {
                           PopupMenuItem(
                             value: "delete",
                             child: ListTile(
-                              leading: Icon(Icons.delete),
+                              leading: Icon(
+                                Icons.delete,
+                                color: Colors.redAccent,
+                              ),
+                              dense: true,
                               title: Text("Delete"),
                               contentPadding: EdgeInsets.zero,
                             ),
                           ),
                         ],
+                    onSelected:
+                        (value) => _handleQuizAction(context, value, category),
                   ),
                   onTap: () {
                     Navigator.push(
@@ -117,5 +124,54 @@ class ManageCategoriesPage extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Future<void> _handleQuizAction(
+    BuildContext context,
+    String value,
+    Category category,
+  ) async {
+    if (value == "edit") {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => AddCategoryScreen(category: category),
+        ),
+      );
+    } else if (value == "delete") {
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder:
+            (context) => AlertDialog(
+              title: Text("Delete Quiz"),
+              content: Text("Are you sure you want to delete this quiz?"),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, false);
+                  },
+                  child: Text("Cancel"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, true);
+                  },
+                  child: Text(
+                    "Delete",
+                    style: TextStyle(color: Colors.redAccent),
+                  ),
+                ),
+              ],
+            ),
+      );
+      if (confirm == true) {
+        await _firestore.collection("categories").doc(category.id).delete();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Category Deleted Successfully"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

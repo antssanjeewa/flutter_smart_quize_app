@@ -56,7 +56,10 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
             .update(updtedCategory.toMap());
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Category Updated Successfully")),
+          SnackBar(
+            content: Text("Category Updated Successfully"),
+            backgroundColor: Colors.green,
+          ),
         );
       } else {
         await _firestore
@@ -70,9 +73,12 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
               ).toMap(),
             );
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Category Added Successfully")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Category Added Successfully"),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
 
       Navigator.pop(context);

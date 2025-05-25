@@ -28,10 +28,9 @@ class Quiz {
       timeLimit: json['timeLimit'] as int,
       questions:
           (json['questions'] as List).map((q) => Question.fromJson(q)).toList(),
-      createdAt:
-          json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
-      updatedAt:
-          json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+      // createdAt:
+      //     json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+      // updatedAt: json['updatedAt'],
     );
   }
 

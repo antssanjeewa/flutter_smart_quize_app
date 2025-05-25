@@ -44,9 +44,26 @@ class _AddQuizScreenState extends State<AddQuizScreen> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController();
-    _timeLimitController = TextEditingController();
-    _addQuestion();
+    _titleController = TextEditingController(text: widget.quiz!.title);
+    _timeLimitController = TextEditingController(
+      text: widget.quiz!.timeLimit.toString(),
+    );
+    _selectedCategoryId = widget.quiz!.categoryId;
+    if (widget.quiz != null) {
+      _questionsItems =
+          widget.quiz!.questions.map((question) {
+            return QuestionsFromItem(
+              questionController: TextEditingController(text: question.text),
+              correctOptionIndex: question.correctOptionIndex,
+              optionsControllers:
+                  question.options
+                      .map((option) => TextEditingController(text: option))
+                      .toList(),
+            );
+          }).toList();
+    } else {
+      _addQuestion();
+    }
   }
 
   @override
@@ -84,9 +101,12 @@ class _AddQuizScreenState extends State<AddQuizScreen> {
     }
 
     if (_selectedCategoryId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Quiz Updated Successfully")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Please enter category"),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
@@ -108,36 +128,43 @@ class _AddQuizScreenState extends State<AddQuizScreen> {
           }).toList();
 
       if (widget.quiz != null) {
-        final updtedQuiz = widget.quiz!.copyWith(
+        final updatedQuiz = widget.quiz!.copyWith(
           title: _titleController.text.trim(),
           timeLimit: int.parse(_timeLimitController.text.trim()),
+          questions: questions,
         );
 
         await _firestore
-            .collection("categories")
+            .collection("quizzes")
             .doc(widget.quiz?.id)
-            .update(updtedQuiz.toJson());
+            .update(updatedQuiz.toJson());
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Quiz Updated Successfully")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Quiz Updated Successfully"),
+            backgroundColor: Colors.green,
+          ),
+        );
       } else {
         await _firestore
-            .collection("categories")
+            .collection("quizzes")
             .add(
               Quiz(
-                id: _firestore.collection("categories").doc().id,
+                id: _firestore.collection("quizzes").doc().id,
                 title: _titleController.text.trim(),
-                categoryId: "1",
-                questions: [],
+                categoryId: _selectedCategoryId!,
+                questions: questions,
                 timeLimit: int.parse(_timeLimitController.text.trim()),
                 createdAt: DateTime.now(),
               ).toJson(),
             );
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Quiz Added Successfully")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Quiz Added Successfully"),
+            backgroundColor: AppTheme.secondary,
+          ),
+        );
       }
 
       Navigator.pop(context);
@@ -238,48 +265,59 @@ class _AddQuizScreenState extends State<AddQuizScreen> {
 
                   StreamBuilder(
                     stream: _firestore.collection("categories").snapshots(),
-                    builder:
-                        (context, snapshot) => DropdownButtonFormField<String>(
-                          decoration: InputDecoration(
-                            fillColor: Colors.white,
-                            hintText: "Category",
-                            prefixIcon: Icon(
-                              Icons.category_rounded,
-                              color: AppTheme.primary,
-                            ),
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 18,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const CircularProgressIndicator(); // or a placeholder Dropdown
+                      }
+
+                      if (!snapshot.hasData || snapshot.data == null) {
+                        return const Text("No categories found"); // fallback UI
+                      }
+
+                      final categories =
+                          snapshot.data!.docs
+                              .map(
+                                (doc) => Category.fromMap(doc.id, doc.data()),
+                              )
+                              .toList();
+
+                      return DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          fillColor: Colors.white,
+                          labelText: "Category",
+                          hintText: "Category",
+                          prefixIcon: Icon(
+                            Icons.category_rounded,
+                            color: AppTheme.primary,
                           ),
-                          value: _selectedCategoryId,
-                          items:
-                              snapshot.data!.docs
-                                  .map(
-                                    (doc) =>
-                                        Category.fromMap(doc.id, doc.data()),
-                                  )
-                                  .map(
-                                    (category) => DropdownMenuItem(
-                                      value: category.id,
-                                      child: Text(category.name),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedCategoryId = value;
-                            });
-                          },
-                          validator:
-                              (val) =>
-                                  val == null
-                                      ? "Please select a category"
-                                      : null,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 18,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
+                        value: _selectedCategoryId,
+                        items:
+                            categories
+                                .map(
+                                  (category) => DropdownMenuItem(
+                                    value: category.id,
+                                    child: Text(category.name),
+                                  ),
+                                )
+                                .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedCategoryId = value;
+                          });
+                        },
+                        validator:
+                            (val) =>
+                                val == null ? "Please select a category" : null,
+                      );
+                    },
                   ),
 
                   SizedBox(height: 24),
@@ -342,7 +380,7 @@ class _AddQuizScreenState extends State<AddQuizScreen> {
                                       ),
                                     ),
                                     IconButton(
-                                      onPressed: () => _removeQuestion,
+                                      onPressed: () => _removeQuestion(index),
                                       icon: Icon(
                                         Icons.delete,
                                         color: Colors.redAccent,
@@ -355,10 +393,13 @@ class _AddQuizScreenState extends State<AddQuizScreen> {
                                 TextFormField(
                                   controller: question.questionController,
                                   decoration: InputDecoration(
-                                    labelText: "Question",
+                                    labelText: "Question Title",
                                     hintText: "Enter question",
+                                    prefixIcon: Icon(
+                                      Icons.question_answer,
+                                      color: AppTheme.primary,
+                                    ),
                                   ),
-                                  keyboardType: TextInputType.number,
                                   validator:
                                       (value) =>
                                           value!.isEmpty
@@ -366,6 +407,51 @@ class _AddQuizScreenState extends State<AddQuizScreen> {
                                               : null,
                                   textInputAction: TextInputAction.next,
                                 ),
+
+                                SizedBox(height: 16),
+                                ...question.optionsControllers
+                                    .asMap()
+                                    .entries
+                                    .map((entity) {
+                                      final optionIndex = entity.key;
+                                      final controller = entity.value;
+                                      return Padding(
+                                        padding: EdgeInsets.only(bottom: 8),
+                                        child: Row(
+                                          children: [
+                                            Radio<int>(
+                                              value: optionIndex,
+                                              groupValue:
+                                                  question.correctOptionIndex,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  question.correctOptionIndex =
+                                                      value!;
+                                                });
+                                              },
+                                            ),
+
+                                            Expanded(
+                                              child: TextFormField(
+                                                controller: controller,
+                                                decoration: InputDecoration(
+                                                  labelText:
+                                                      "Option ${optionIndex + 1}",
+                                                  hintText: "Enter option",
+                                                ),
+                                                validator:
+                                                    (value) =>
+                                                        value!.isEmpty
+                                                            ? "Enter option"
+                                                            : null,
+                                                textInputAction:
+                                                    TextInputAction.next,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }),
                               ],
                             ),
                           ),

@@ -69,7 +69,7 @@ class _ManageQuizzesPageState extends State<ManageQuizzesPage> {
     return query.snapshots();
   }
 
-  Widget _buldTitle() {
+  Widget _buildTitle() {
     String? categoryId = _selectCategoryId ?? widget.categoryId;
 
     if (categoryId == null) {
@@ -79,11 +79,12 @@ class _ManageQuizzesPageState extends State<ManageQuizzesPage> {
     return StreamBuilder(
       stream: _firestore.collection("categories").doc(categoryId).snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return Text(
             "Loading....",
             style: TextStyle(fontWeight: FontWeight.bold),
           );
+        }
 
         final category = Category.fromMap(
           categoryId,
@@ -102,7 +103,7 @@ class _ManageQuizzesPageState extends State<ManageQuizzesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: _buldTitle(),
+        title: _buildTitle(),
         actions: [
           IconButton(
             onPressed: () {
@@ -162,8 +163,8 @@ class _ManageQuizzesPageState extends State<ManageQuizzesPage> {
                 //   ),
                 ..._categories.map(
                   (category) => DropdownMenuItem(
-                    child: Text(category.name),
                     value: category.id,
+                    child: Text(category.name),
                   ),
                 ),
               ],
@@ -256,6 +257,7 @@ class _ManageQuizzesPageState extends State<ManageQuizzesPage> {
                                   value: "edit",
                                   child: ListTile(
                                     leading: Icon(Icons.edit),
+                                    dense: true,
                                     title: Text("Edit"),
                                     contentPadding: EdgeInsets.zero,
                                   ),
@@ -263,7 +265,11 @@ class _ManageQuizzesPageState extends State<ManageQuizzesPage> {
                                 PopupMenuItem(
                                   value: "delete",
                                   child: ListTile(
-                                    leading: Icon(Icons.delete),
+                                    leading: Icon(
+                                      Icons.delete,
+                                      color: Colors.redAccent,
+                                    ),
+                                    dense: true,
                                     title: Text("Delete"),
                                     contentPadding: EdgeInsets.zero,
                                   ),
@@ -291,6 +297,9 @@ class _ManageQuizzesPageState extends State<ManageQuizzesPage> {
     Quiz quiz,
   ) async {
     if (value == "edit") {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => AddQuizScreen(quiz: quiz)),
+      );
     } else if (value == "delete") {
       final confirm = await showDialog<bool>(
         context: context,
@@ -319,6 +328,12 @@ class _ManageQuizzesPageState extends State<ManageQuizzesPage> {
       );
       if (confirm == true) {
         await _firestore.collection("quizzes").doc(quiz.id).delete();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Quiz Deleted Successfully"),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
