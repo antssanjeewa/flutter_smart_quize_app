@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:quize_app/models/category.dart';
 import 'package:quize_app/utils/theme.dart';
+import 'package:quize_app/views/user_category_screen.dart';
 
 class UserScreen extends StatefulWidget {
   const UserScreen({super.key});
@@ -54,7 +56,9 @@ class _UserScreenState extends State<UserScreen> {
             final matchCategory =
                 categoryFilter == null ||
                 categoryFilter == "All" ||
-                category.name.toLowerCase().contains(query.toLowerCase());
+                category.name.toLowerCase().contains(
+                  categoryFilter.toLowerCase(),
+                );
 
             return matchCategory && matchesSearch;
           }).toList();
@@ -239,34 +243,61 @@ class _UserScreenState extends State<UserScreen> {
 
   Widget _buildCategoryCard(Category category, int index) {
     return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {},
-        child: Container(
-          padding: EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withAlpha(50),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.quiz, size: 48, color: AppTheme.primary),
-              ),
-
-              SizedBox(height: 16),
-              Text(
-                category.name,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ],
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-        ),
-      ),
-    );
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => UserCategoryScreen(category: category),
+                ),
+              );
+            },
+            child: Container(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withAlpha(50),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(Icons.quiz, size: 48, color: AppTheme.primary),
+                  ),
+
+                  SizedBox(height: 16),
+                  Text(
+                    category.name,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    category.description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        )
+        .animate(delay: Duration(milliseconds: 100 * index))
+        .slideY(begin: 0.5, end: 0, duration: Duration(milliseconds: 300))
+        .fadeIn();
   }
 }
