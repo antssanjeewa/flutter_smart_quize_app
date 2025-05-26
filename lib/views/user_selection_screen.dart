@@ -9,36 +9,45 @@ class UserSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100], // soft background
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildCard(
-                context: context,
-                name: "User",
-                icon: Icons.person_outline,
-                onTap: () {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => UserScreen()),
-                  );
-                },
+      backgroundColor: AppTheme.primary,
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.question_answer_outlined, size: 50, color: Colors.white),
+            SizedBox(height: 10),
+            Text(
+              "Smart Quiz",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 40,
               ),
-              const SizedBox(height: 24),
-              _buildCard(
-                context: context,
-                name: "Admin",
-                icon: Icons.admin_panel_settings_outlined,
-                onTap: () {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => HomePage()),
-                  );
-                },
-              ),
-            ],
-          ),
+            ),
+            SizedBox(height: 150),
+            _buildCard(
+              context: context,
+              name: "User",
+              icon: Icons.person_outline,
+              onTap: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => UserScreen()),
+                );
+              },
+            ),
+            const SizedBox(height: 24),
+            _buildCard(
+              context: context,
+              name: "Admin",
+              icon: Icons.admin_panel_settings_outlined,
+              onTap: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => HomePage()),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -54,7 +63,8 @@ class UserSelectionScreen extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Card(
-        elevation: 4,
+        elevation: 2,
+        color: Colors.white.withAlpha(200),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Container(
           width: double.infinity,
